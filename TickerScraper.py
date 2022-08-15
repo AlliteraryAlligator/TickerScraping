@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[6]:
-
-
-from __future__ import print_function
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -17,11 +10,19 @@ import pytz
 import os
 import os.path
 from pathlib import Path
+from __future__ import print_function
+
+#for scraper
+import numpy as np
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import pprint
 
 #USER SPECIFICATIONS - INFO ABT SPREADSHEET
 #assumption: a column is dedicated for the exchange
-SPREADSHEET_ID = '1RNAo9JvtyNMQWrUKLaSmPVxNvSpHjw1ryWMv8KRl0hc' #'17U2ecbkYX4Ul1B1Kcz0O_37UiyKOs423pgzzeBAbQZw' ##'#
-SHEET_NAME = 'KG Holdings Master'
+SPREADSHEET_ID = 'Google Sheet ID'
+SHEET_NAME = 'Name of the Google Sheet'
 STARTING_ROW_NUM = '3'
 ENDING_ROW_NUM = '136'
 
@@ -37,12 +38,17 @@ WRITE_START_COLUMN = 'C'
 WRITE_END_COLUMN = 'G'
 
 
-
 #CUSTOM CONSTANTS
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/spreadsheets'
 
 TICKER_EXCHANGE_RANGE = SHEET_NAME+'!'+TICKER_COLUMN+STARTING_ROW_NUM+':'+TIME_STAMP_COLUMN+ENDING_ROW_NUM
 WRITE_RANGE_NAME = SHEET_NAME+'!'+WRITE_START_COLUMN+STARTING_ROW_NUM+':'+WRITE_END_COLUMN+ENDING_ROW_NUM
+
+
+
+if __name__ == '__main__':
+    main()
+
 
 def main():
     
@@ -52,13 +58,10 @@ def main():
     # time.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            #user_cred, _ = default()
-            #credentials = Credentials(user_cred, sa, scopes)
-            #credentials._source_credentials._scopes = user_cred.scopes
-            
             if Path('token.json').exists():
                 os.remove('token.json')
             creds.refresh(Request())
@@ -66,8 +69,8 @@ def main():
             flow = InstalledAppFlow.from_client_secrets_file(
                 'client_secret_1018816297994-fil2doubov5rppaeqtpmjmcv2788ak6s.apps.googleusercontent.com.json', SCOPES)
             creds = flow.run_local_server(port=0)
+            
         # Save the credentials for the next run
-        
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
 
@@ -92,9 +95,9 @@ def main():
         
         classNames = ["hrc1Nd", "M2CUtd"]
         labels = ["Previous close", "Day range"]
-        print('Ticker, Exchange:')
+        
         for tickerExchange in tickerExchangeList:
-            print(tickerExchange)
+            
             values = retrieveData(tickerExchange[0], tickerExchange[1], classNames, labels, 3, "₹")
             
             #UPDATE STATUS & TIMESTAMP
@@ -122,21 +125,9 @@ def main():
             spreadsheetId=SPREADSHEET_ID, range=WRITE_RANGE_NAME,
             valueInputOption='USER_ENTERED', body=body).execute()
 
-    
+ 
 
-if __name__ == '__main__':
-    main()
-
-
-# In[1]:
-
-
-import numpy as np
-from bs4 import BeautifulSoup
-import requests
-import pandas as pd
-import pprint
-
+#SCRAPING & PARSING
 
 def getURL(ticker, exchange):
     template = "https://g.co/finance/"
@@ -205,5 +196,4 @@ exchange = "NSE"
 classNames = ["hrc1Nd", "M2CUtd"]
 labels = ["Previous close", "Day range"]
 html = scrapePage(getURL(ticker, exchange))
-#print(retrieveData(ticker, exchange, classNames, labels,3, "$"))
 
